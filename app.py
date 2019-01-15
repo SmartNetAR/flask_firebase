@@ -27,7 +27,12 @@ def index():
         try:
             user = auth.sign_in_with_email_and_password(email, password)
             # print(user)
-            return render_template('dashboard.html', u=user)
+            # print(auth.current_user)
+            # print(auth.current_user)
+            uid = user['localId']
+            sorteos = db.child("sorteos").child(uid).get()
+            sor = sorteos.val()
+            return render_template('dashboard.html', s=sor.values(), u=user)
         except:
             return render_template('login.html', us=unsuccessful)
             
@@ -49,6 +54,7 @@ def register():
             # print(userToken)
             return render_template('register.html', s=success)
         except:
+            print(auth.current_user)
             return render_template('register.html', us=unsuccessful)
 
     return render_template('register.html')
@@ -56,23 +62,31 @@ def register():
 @app.route('/sorteo', methods=['GET', 'POST'])
 def store():
     if request.method == 'POST':
+        # user = auth.get_account_info(id_token)
+        # user = auth.sign_in_with_email_and_password('jonathan@smartnet.com.ar', '123456')
+        # print('id_token: ' + request.id_token)
+        # print('request token: ' + request.form['token'])
+        token = request.form['token']
+        account_info = auth.get_account_info(token)
+        #user = account_info['users']
+        user = auth.current_user
         date = request.form['date']
         premio = request.form['premio']
         numbers = request.form['numbers']
         price = request.form['price']
+        # uid = user[0]['localId']
+        uid = user['localId']
+        sorteo = {'date':date, 'premio':premio, 'numbers':numbers, 'price':price}
+        db.child('sorteos').child(uid).push(sorteo, user['idToken'])
+        sorteos = db.child("sorteos").child(uid).get()
+        sor = sorteos.val()
+        return render_template('dashboard.html', s=sor.values(), u=user)
 
-        # db.child('sorteos').push({'date':'date'})
-        # db.child('sorteos').push({'premio':'premio'})
-        # db.child('sorteos').push({'numbers':'numbers'})
-        # db.child('sorteos').push({'price':'price'})
-        db.child('sorteos').push({'date':date, 'premio':premio, 'numbers':numbers, 'price':price})
-        sorteo = db.child("sorteos").get()
-        sor = sorteo.val()
-        return render_template('dashboard.html', s=sor.values())
-
-    sorteo = db.child("sorteos").get()
-    sor = sorteo.val()
-    return render_template('dashboard.html', s=sor.values())
+    user = auth.sign_in_with_email_and_password('leonardo@smartnet.com.ar', 'SAeempdm0036')
+    uid = user['localId']
+    sorteos = db.child("sorteos").child(uid).get()
+    sor = sorteos.val()
+    return render_template('dashboard.html', s=sor.values(), u=user)
 
 
 
